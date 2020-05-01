@@ -1,35 +1,37 @@
 const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
-  directive @formatBytes on FIELD_DEFINITION
-
-  type Repo {
-    name: String!
-    stars: Int!
-    size: String! @formatBytes
-    owner: String!
+  enum Providers {
+    google
+    github
   }
-  
+
   type User {
+    provider: Providers!
+    socialId: ID!
+    id: ID!
     name: String!
-    githubLogin: String!
-    githubToken: String!
-    avatar: String!
+    username: String!
+    email: String!
   }
 
-  type AuthPayload {
-    githubToken: String!
-    user: User!
+  type Todo {
+    id: ID!
+    title: String!
+    isDone: Boolean
   }
 
   type Query {
-    repos: [Repo!]!
-    me: User!
-    githubLoginUrl: String!
+    users: [User!]!
+    todos: [Todo!]!
+    me: User
   }
 
   type Mutation {
-    authorizeWithGithub(code: String!): AuthPayload!
+    addTodo(title: String!): Todo!
+    deleteTodo(id: ID!): Todo!
+    toggleTodo(id: ID!): Todo!
+    logout: Boolean
   }
 `;
 

@@ -1,43 +1,66 @@
-const { ApolloServer } = require("apollo-server-express");
+require("dotenv").config();
 const express = require("express");
-const dotenv = require("dotenv");
+const passport = require("passport");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const { v4 } = require("uuid");
+const mongoose = require("mongoose");
 
+// graphql
+const { buildContext } = require("graphql-passport");
+const { ApolloServer } = require("apollo-server-express");
 const typeDefs = require("./graphql/typeDefs");
 const resolvers = require("./graphql/resolvers");
-
-const { requestGithubUserAccount } = require("./utils");
 const FormatBytesDirective = require("./graphql/directives/formatBytes");
 
-dotenv.config();
+require("./passport");
+const authRoute = require("./routes/auth");
+
 const app = express();
 
+const PORT = 4000;
+const SESSION_SECRECT = "DAMNNN ITS EXPOSED";
+app.use(
+  session({
+    genid: () => v4(),
+    secret: SESSION_SECRECT,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(cookieParser());
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use("/auth", authRoute);
+
 const server = new ApolloServer({
+  typeDefs,
+  resolvers,
   schemaDirectives: {
     formatBytes: FormatBytesDirective,
   },
-  typeDefs,
-  resolvers,
-  context: async ({ req }) => {
-    const authHeader = req.headers.authorization || "";
-    const token = authHeader.split(" ")[1];
-    const githubUser = await requestGithubUserAccount(token);
-    if (!githubUser.data) {
-      return { currentUser: null };
-      // throw new AuthenticationError("you must be logged in");
-    }
-
-    let user = {
-      username: githubUser.data.login,
-      name: githubUser.data.name,
-      githubLogin: githubUser.data.login,
-      avatar: githubUser.data.avatar_url,
-    };
-    // add the user to the context
-    return { currentUser: user, token };
+  playground: {
+    settings: {
+      "request.credentials": "include",
+    },
   },
+  context: ({ req, res }) => buildContext({ req, res }),
 });
 
-server.applyMiddleware({ app });
-app.listen({ port: 3000 }, () => {
-  console.log(`🚀 Server ready at http://localhost:3000${server.graphqlPath}`);
-});
+server.applyMiddleware({ app, cors: false });
+
+mongoose
+  .connect(process.env.DB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    app.listen({ port: PORT }, () => {
+      console.log(
+        `🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`
+      );
+    });
+  })
+  .catch(console.error);
