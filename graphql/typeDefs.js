@@ -1,6 +1,8 @@
 const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
+  directive @auth on FIELD_DEFINITION
+
   enum Providers {
     google
     github
@@ -22,15 +24,15 @@ const typeDefs = gql`
   }
 
   type Query {
-    users: [User!]!
-    todos: [Todo!]!
+    users: [User!]! @auth
+    todos: [Todo!]! @auth
     me: User
   }
 
   type Mutation {
-    addTodo(title: String!): Todo!
-    deleteTodo(id: ID!): Todo!
-    toggleTodo(id: ID!): Todo!
+    addTodo(title: String!): Todo! @auth
+    deleteTodo(id: ID!): Todo! @auth
+    toggleTodo(id: ID!): Todo! @auth
     logout: Boolean
   }
 `;

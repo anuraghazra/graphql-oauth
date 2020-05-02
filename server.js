@@ -1,17 +1,15 @@
 require("dotenv").config();
+const { v4 } = require("uuid");
 const express = require("express");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
-const { v4 } = require("uuid");
 const mongoose = require("mongoose");
 
 // graphql
 const { buildContext } = require("graphql-passport");
 const { ApolloServer } = require("apollo-server-express");
-const typeDefs = require("./graphql/typeDefs");
-const resolvers = require("./graphql/resolvers");
-const FormatBytesDirective = require("./graphql/directives/formatBytes");
+const { typeDefs, resolvers, AuthDirective } = require("./graphql");
 
 require("./passport");
 const authRoute = require("./routes/auth");
@@ -19,11 +17,10 @@ const authRoute = require("./routes/auth");
 const app = express();
 
 const PORT = 4000;
-const SESSION_SECRECT = "DAMNNN ITS EXPOSED";
 app.use(
   session({
     genid: () => v4(),
-    secret: SESSION_SECRECT,
+    secret: process.env.SESSION_SECRECT,
     resave: false,
     saveUninitialized: false,
   })
@@ -39,8 +36,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   schemaDirectives: {
-    formatBytes: FormatBytesDirective,
+    auth: AuthDirective,
   },
+  // not needed
   playground: {
     settings: {
       "request.credentials": "include",
@@ -49,7 +47,7 @@ const server = new ApolloServer({
   context: ({ req, res }) => buildContext({ req, res }),
 });
 
-server.applyMiddleware({ app, cors: false });
+server.applyMiddleware({ app });
 
 mongoose
   .connect(process.env.DB_URI, {
