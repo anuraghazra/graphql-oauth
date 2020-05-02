@@ -13,6 +13,7 @@ const resolvers = {
 
   Mutation: {
     addTodo: TodoController.addTodo,
+    updateTodo: TodoController.updateTodo,
     deleteTodo: TodoController.deleteTodo,
     toggleTodo: TodoController.toggleTodo,
     logout: (_parent, _args, { logout }) => {

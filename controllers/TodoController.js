@@ -7,6 +7,15 @@ exports.addTodo = async (_, { title }) => {
   return todo;
 };
 
+exports.updateTodo = async (_, { id, title }) => {
+  let updatedTodo = await Todo.findByIdAndUpdate(
+    id,
+    { title: title },
+    { new: true }
+  );
+  return updatedTodo;
+};
+
 exports.deleteTodo = async (_, { id }) => {
   let todo = await Todo.findByIdAndRemove(id);
   if (!todo) throw new ApolloError("Unable to find todo with id: " + id);

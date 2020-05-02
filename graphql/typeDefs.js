@@ -31,6 +31,7 @@ const typeDefs = gql`
 
   type Mutation {
     addTodo(title: String!): Todo! @auth
+    updateTodo(id: ID! title: String!): Todo! @auth
     deleteTodo(id: ID!): Todo! @auth
     toggleTodo(id: ID!): Todo! @auth
     logout: Boolean

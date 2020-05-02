@@ -3,7 +3,9 @@ const { v4 } = require("uuid");
 const express = require("express");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
-const session = require("express-session");
+// const session = require("express-session");
+const cors = require("cors");
+const cookieSession = require("cookie-session");
 const mongoose = require("mongoose");
 
 // graphql
@@ -18,11 +20,16 @@ const app = express();
 
 const PORT = 4000;
 app.use(
-  session({
-    genid: () => v4(),
-    secret: process.env.SESSION_SECRECT,
-    resave: false,
-    saveUninitialized: false,
+  cors({
+    credentials: true,
+    origin: "*",
+  })
+);
+app.use(
+  cookieSession({
+    name: "session",
+    keys: [process.env.SESSION_SECRECT],
+    maxAge: 24 * 60 * 60 * 1000, // session will expire after 24 hours
   })
 );
 
